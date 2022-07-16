@@ -1,0 +1,52 @@
+const express = require('express');
+
+const {
+  createRestaurant,
+  getAllRestaurants,
+  getRestaurantById,
+  updateRestaurant,
+  deteleRestaurant,
+  createReview,
+  updateReview,
+  deleteReview,
+} = require('../controllers/restaurants.controller');
+
+const {
+  createRestaurantValidators,
+  createReviewValidators,
+} = require('../middlewares/validators.middleware');
+
+const { restaurantExists } = require('../middlewares/restaurants.middleware');
+const { reviewExists } = require('../middlewares/reviews.middleware');
+
+const { protectSession } = require('../middlewares/auth.middleware');
+
+const restaurantsRouter = express.Router();
+
+restaurantsRouter.get('/', getAllRestaurants);
+restaurantsRouter.get('/:id', restaurantExists, getRestaurantById);
+
+restaurantsRouter.use(protectSession);
+
+restaurantsRouter.post('/', createRestaurantValidators, createRestaurant);
+
+restaurantsRouter.post(
+  '/reviews/:restaurantId',
+  createReviewValidators,
+  restaurantExists,
+  createReview
+);
+
+restaurantsRouter
+  .use('/reviews/:reviewId', reviewExists)
+  .route('/reviews/:reviewId')
+  .patch(updateReview)
+  .delete(deleteReview);
+
+restaurantsRouter
+  .use('/:id', restaurantExists)
+  .route('/:id')
+  .patch(updateRestaurant)
+  .delete(deteleRestaurant);
+
+module.exports = { restaurantsRouter };
